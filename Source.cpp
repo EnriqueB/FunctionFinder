@@ -15,18 +15,19 @@
 #include <cmath>
 #include <limits>
 #include <cstdint>
+#include <cmath>
 
-#define TOURNAMENT_SIZE 5
+#define TOURNAMENT_SIZE 9
 #define POPULATION_SIZE 1000
 #define INPUT_SIZE 21.0
 #define SAMPLE_SIZE 21
 #define GENERATIONS 10000
-#define PARSIMONY_PRESSURE 0.2
+#define PARSIMONY_PRESSURE 0.5
 
 using namespace std;
 
 double testArray [SAMPLE_SIZE][2];
-vector <string> functionSet = { "+", "-", "*", "/" };
+vector <string> functionSet = { "+", "-", "*", "/", "l"};
 vector <Individual> individuals;
 
 double crossoverRate = 0.9;
@@ -48,11 +49,16 @@ double calculate(double op1, double op2, string operation) {
 	case '/':
         //protected division, can't divide by 0
 		if (op2 < 0.0000001 && op2 > -0.0000001) {
-			return 0;
+			return 0.0;
 		}
 		else {
 			return op1 / op2;
 		}
+    case 'l':
+        if(op1<=0.01 || op2<=0.01){
+            return 0.0;
+        }
+        return (log(op2)/log(op1));
 	}
 }
 
@@ -180,7 +186,6 @@ void generateOffspring() {
 
 int main() {
 	srand(time(NULL));
-	vector <string> functionSet = { "+", "-", "*", "/" };
 	vector <string> terminalSet = { "x" };
 
 	ifstream f("values.txt");
