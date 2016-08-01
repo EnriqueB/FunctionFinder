@@ -34,13 +34,9 @@ public:
 	double getFitness();
 
 	string initialize(int depth, char type);
-
 	int endIndexOfNode(int start, string str);
-
 	void mutate();
-
 	void crossOver(string a, string b);
-
 	void print();
 };
 
@@ -65,7 +61,7 @@ Individual::Individual(vector <string> functionSet, vector <string> terminalSet,
 }
 
 void Individual::setSolution(string s) {
-solution = s;
+    solution = s;
 }
 
 void Individual::setFitness(double f) {
@@ -94,10 +90,15 @@ string Individual::initialize(int depth, char type) {
 			return strs.str();
 		}
 		else {
+            //return a variable
 			return terminals[random];
 		}
 	}
 	else {
+        /*
+         * This should be changed to accommodate for
+         * functions with different arities
+         */
 		int random = rand() % functions.size();
 		string function = functions[random];
 		//all functions have arity 2
@@ -110,8 +111,12 @@ string Individual::initialize(int depth, char type) {
 void Individual::print() {
 	//print a tree
 	int x = 0;
+    //to do...
 }
 
+/*
+ * This method finds the index of the end of a node in a string
+ */
 int Individual::endIndexOfNode(int start, string str) {
 	//check if node is a number
 	int i = start;
@@ -130,33 +135,57 @@ int Individual::endIndexOfNode(int start, string str) {
 		//advance to the next node
 		if ((str[i] >= 48 && str[i] <= 57) | str[i] == 'x') {
 			//node is a terminal
-			while (i < str.length() && str[i] != ' ')
+			while (i < str.length() && str[i] != ' ') //consume all characters of the terminal
 				i++;
 
 			bool top = true;
 			//check if top of stack is a terminal
+            /*
+            * This should be changed to accommodate for
+            * functions with different arities
+            */
 			while ((s.top() >= 48 && s.top() <= 57) | s.top() == 'x') {
+                /*
+                 * If the top of the stack is a terminal, remove
+                 * from the stack twice (should actually pop until it
+                 * finds a function? Or maybe i should keep track of
+                 * the arity of the functions that have been pushed
+                 */
 				top = false;
 				s.pop();
 				s.pop();
 				if (s.empty()) {
+                    //stack is empty, the end of the node has been reached
 					return i;
 				}
-				else {
-					if ((s.top() >= 48 && s.top() <= 57) | s.top() == 'x') {
-						continue;
-					}
-					else {
-						s.push('0');
-						break;
-					}
-				}
+                if ((s.top() >= 48 && s.top() <= 57) | s.top() == 'x') {
+                    /*
+                     * If there is another terminal at the top, nothing
+                     * is pushed into the stack so in the next iteration
+                     * the terminal is poped along with the function.
+                     * This should also be revised for multiple arities.
+                     */
+                    continue;
+                }
+                else {
+                    //if the top is a function a dummy terminal is pushed
+                    s.push('0');
+                    break;
+                }
 			}
 			if (top) {
+                /*
+                 * If a terminal is found, but the top is not a terminal
+                 * then a dummy terminal is pushed into the stack.
+                 * This is done after the while loop to avoid
+                 * the loop detecting the recently found terminal.
+                 * This should also be revised for multiple arities
+                 */
 				s.push('0');
 			}
 		}
 		else {
+            //If a terminal is found it is pushed to the stack
 			s.push(str[i]);
 			i++;
 		}
@@ -166,21 +195,21 @@ int Individual::endIndexOfNode(int start, string str) {
 }
 
 void Individual::mutate() {
-	//go node per node checking for mutation
+	//go node per node rolling for mutation
 	int endIndex = 0;
 	for (int i = 0; i < solution.length(); i++) {
 		double random = (double)rand() / ((double)RAND_MAX);
 		if (random < mutationChance) {
 			//this node is mutated
-			char type = 'g';
+			char type = 'f';
 			if (rand() % 2 < 0.5) {
 				type = 'g';
 			}
-			endIndex = endIndexOfNode(i, solution);
-			string mutation = initialize((rand() % 4) + 1, type);
-			solution.replace(i, endIndex - i, mutation);
+			endIndex = endIndexOfNode(i, solution); //find the end index of the node
+			string mutation = initialize((rand() % 4) + 1, type);   //create a new string
+			solution.replace(i, endIndex - i, mutation);    //the whole node is replaced by the new tree
 			i = i + mutation.length();
-			while (i<solution.length() && solution[i] != ' ')
+			while (i<solution.length() && solution[i] != ' ')   //Advance until the end of the mutated sub-tree
 				i++;
 			continue;
 		}
@@ -188,7 +217,7 @@ void Individual::mutate() {
 			//advance to the next node
 			if (solution[i] >= 48 && solution[i] <= 57) {
 				//node is a number
-				while (i<solution.length() && solution[i] != ' ')
+				while (i<solution.length() && solution[i] != ' ') //consume all characters
 					i++;
 			}
 			else {						//THIS SHOULD CHANGE IF FUNCTIONS ARE REPRESENTED BY MORE THAN ONE LETTER
@@ -200,9 +229,14 @@ void Individual::mutate() {
 
 }
 
+/*
+ * This method does a crossover between parent a and parent b
+ */
 void Individual::crossOver(string a, string b) {
 	int nodesA = count(a.begin(), a.end(), ' ');
 	int nodesB = count(b.begin(), b.end(), ' ');
+
+    //Check for trees with a single node
 	if (nodesA == 0 && nodesB == 0) {
 		solution = a;
 		return;
@@ -259,6 +293,7 @@ void Individual::crossOver(string a, string b) {
 		}
 	}
 	solution = a;
+    //find end index for the chosen nodes
 	int endA = endIndexOfNode(crossOverIndex_A, a);
 	int endB = endIndexOfNode(crossOverIndex_B, b);
 	string s = b.substr(crossOverIndex_B, endB-crossOverIndex_B);
