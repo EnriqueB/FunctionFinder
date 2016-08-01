@@ -16,11 +16,12 @@
 #include <limits>
 #include <cstdint>
 
-#define TOURNAMENT_SIZE 3
+#define TOURNAMENT_SIZE 5
 #define POPULATION_SIZE 1000
 #define INPUT_SIZE 21.0
 #define SAMPLE_SIZE 21
 #define GENERATIONS 10000
+#define PARSIMONY_PRESSURE 0.2
 
 using namespace std;
 
@@ -144,29 +145,14 @@ int tournament(bool type){
 		string s = individuals[ind].getSolution();
 		int nodes = count(s.begin(), s.end(), ' ');
         //check tournament type
-		if (((individuals[ind].getFitness() + nodes*0.2)< fitness)==type) {
+		if (((individuals[ind].getFitness() + nodes*PARSIMONY_PRESSURE)< fitness)==type) {
 			fitness = individuals[ind].getFitness();
 			index = ind;
 		}
 	}
 	return index;
 }
-/*
-int negativeTournament() {
-	double fitness = 0;
-	int index = 0;
-	for (int i = 0; i < TOURNAMENT_SIZE; i++) {
-		int ind = rand() % POPULATION_SIZE;
-		string s = individuals[ind].getSolution();
-		int nodes = count(s.begin(), s.end(), ' ');
-		if (individuals[ind].getFitness() + nodes*0.5 > fitness) {
-			fitness = individuals[ind].getFitness();
-			index = ind;
-		}
-	}
-	return index;
-}
-*/
+
 void generateOffspring() {
 	double random = ((double)rand() / (RAND_MAX));
 	Individual ind;
