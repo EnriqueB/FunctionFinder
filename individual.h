@@ -84,7 +84,7 @@ string Individual::initialize(int depth, char type) {
 		int random = rand() % (terminals.size() + 1);
 		if (random == terminals.size()) {
 			//generate and return a constant
-			double constant = (rand() % (int)(maxValue * 1000 - minValue * 1000)) / 1000.0;
+			double constant = (rand() % (int)(maxValue * 1000 + abs(minValue * 1000))) / 1000.0 - abs(minValue);
 			ostringstream strs;
 			strs << constant;
 			return strs.str();
@@ -120,7 +120,7 @@ void Individual::print() {
 int Individual::endIndexOfNode(int start, string str) {
 	//check if node is a number
 	int i = start;
-	if ((str[i] >= 48 && str[i] <= 57) | str[i] == 'x') {
+	if ((str[i] >= 48 && str[i] <= 57) || str[i] == 'x' || (str[i] == '-' && str[i+1]!=' ')) {
 		//find end of number
 		while (i<str.length() && str[i] != ' ')
 			i++;
@@ -133,7 +133,7 @@ int Individual::endIndexOfNode(int start, string str) {
 	i += 2;
 	while (!s.empty()) {
 		//advance to the next node
-		if ((str[i] >= 48 && str[i] <= 57) | str[i] == 'x') {
+		if ((str[i] >= 48 && str[i] <= 57) || str[i] == 'x' || (str[i]=='-' && str[i+1]!=' ')) {
 			//node is a terminal
 			while (i < str.length() && str[i] != ' ') //consume all characters of the terminal
 				i++;
@@ -144,7 +144,7 @@ int Individual::endIndexOfNode(int start, string str) {
             * This should be changed to accommodate for
             * functions with different arities
             */
-			while ((s.top() >= 48 && s.top() <= 57) | s.top() == 'x') {
+			while (s.top() == '0' || s.top() == 'x') {
                 /*
                  * If the top of the stack is a terminal, remove
                  * from the stack twice (should actually pop until it
@@ -158,7 +158,7 @@ int Individual::endIndexOfNode(int start, string str) {
                     //stack is empty, the end of the node has been reached
 					return i;
 				}
-                if ((s.top() >= 48 && s.top() <= 57) | s.top() == 'x') {
+                if (s.top() == '0' || s.top() == 'x') {
                     /*
                      * If there is another terminal at the top, nothing
                      * is pushed into the stack so in the next iteration
@@ -215,7 +215,7 @@ void Individual::mutate() {
 		}
 		else {
 			//advance to the next node
-			if (solution[i] >= 48 && solution[i] <= 57) {
+			if (solution[i] >= 48 && solution[i] <= 57 || (solution[i] == '-' && solution[i+1]!=' ')) {
 				//node is a number
 				while (i<solution.length() && solution[i] != ' ') //consume all characters
 					i++;
@@ -262,15 +262,9 @@ void Individual::crossOver(string a, string b) {
 				break;
 			}
 			//advance to the next node
-			if(a[i]>=48 && a[i] <= 57){
-				//node is a number
-				while (i<a.length() && a[i] != ' ')
-					i++;
-			}
-			else {						//THIS SHOULD CHANGE IF FUNCTIONS ARE REPRESENTED BY MORE THAN ONE LETTER
-				//not a number, advance once
-				i++;
-			}
+            while(i<a.length() && a[i] != ' '){
+                i++;
+            }
 		}
 	}
 	while (crossOverIndex_B == -1) {
@@ -281,15 +275,9 @@ void Individual::crossOver(string a, string b) {
 				break;
 			}
 			//advance to the next node
-			if (b[i] >= 48 && b[i] <= 57) {
-				//node is a number
-				while (i<b.length() && b[i] != ' ')
-					i++;
-			}
-			else {						//THIS SHOULD CHANGE IF FUNCTIONS ARE REPRESENTED BY MORE THAN ONE LETTER
-										//not a number, advance once
-				i++;
-			}
+            while(i<b.length() && b[i]!=' '){
+                i++;
+            }
 		}
 	}
 	solution = a;

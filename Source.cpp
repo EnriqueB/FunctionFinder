@@ -17,12 +17,12 @@
 #include <cstdint>
 #include <cmath>
 
-#define TOURNAMENT_SIZE 9
-#define POPULATION_SIZE 1000
-#define INPUT_SIZE 21.0
-#define SAMPLE_SIZE 21
-#define GENERATIONS 10000
-#define PARSIMONY_PRESSURE 0.5
+#define TOURNAMENT_SIZE 5
+#define POPULATION_SIZE 10000
+#define INPUT_SIZE 20.0
+#define SAMPLE_SIZE 20
+#define GENERATIONS 100000
+#define PARSIMONY_PRESSURE 0.3
 
 using namespace std;
 
@@ -198,14 +198,14 @@ int main() {
 		if (rand() % 2 < 0.5) {
 			type = 'g';
 		}
-		Individual ind(functionSet, terminalSet, -5, 5, 3+(i/(POPULATION_SIZE/5)), type, mutationChance, crossoverRate);
+		Individual ind(functionSet, terminalSet, -10, 10, 3+(i/(POPULATION_SIZE/5)), type, mutationChance, crossoverRate);
 		individuals.push_back(ind);
 	}
 	evaluateFitness();
 	cout << "Starting...\n";
 	for (; generation < GENERATIONS; generation++) {
 		generateOffspring();
-        if(bestFitness < 0.000001){
+        if(bestFitness < 0.00001){
             break;
         }
 	}
