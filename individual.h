@@ -284,7 +284,6 @@ void Individual::crossOver(string a, string b) {
     //find end index for the chosen nodes
 	int endA = endIndexOfNode(crossOverIndex_A, a);
 	int endB = endIndexOfNode(crossOverIndex_B, b);
-	string s = b.substr(crossOverIndex_B, endB-crossOverIndex_B);
 	solution.replace(crossOverIndex_A, endA-crossOverIndex_A, b.substr(crossOverIndex_B, endB - crossOverIndex_B));
 }
 
