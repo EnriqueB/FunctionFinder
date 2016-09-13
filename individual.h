@@ -7,6 +7,7 @@
 #include <stack>
 #include <set>
 #include <algorithm>
+#include <utility>
 
 
 using namespace std;
@@ -15,7 +16,7 @@ class Individual {
 private:
 	string solution;
 	double fitness;
-	vector <string> functions;
+	vector <pair <string, int> > functions;
 	vector <string> terminals;
 	double minValue;
 	double maxValue;
@@ -24,7 +25,7 @@ private:
 
 public:
 	Individual();
-	Individual(vector <string> functionSet, vector <string> terminalSet, int minimum, int maximum, int depth, char type, double mC, double cC);
+	Individual(vector <pair <string, int> > functionSet, vector <string> terminalSet, int minimum, int maximum, int depth, char type, double mC, double cC);
 	//sets
 	void setSolution(string s);
 	void setFitness(double f);
@@ -49,7 +50,7 @@ Individual::Individual() {
 	crossoverChance = 1;
 }
 
-Individual::Individual(vector <string> functionSet, vector <string> terminalSet, int minimum, int maximum, int depth, char type, double mC, double cC) {
+Individual::Individual(vector <pair<string, int> > functionSet, vector <string> terminalSet, int minimum, int maximum, int depth, char type, double mC, double cC) {
 	functions = functionSet;
 	terminals = terminalSet;
 	minValue = minimum / 1.0;
@@ -100,11 +101,13 @@ string Individual::initialize(int depth, char type) {
          * functions with different arities
          */
 		int random = rand() % functions.size();
-		string function = functions[random];
-		//all functions have arity 2
-		string argument1 = initialize(depth - 1, type);
-		string argument2 = initialize(depth - 1, type);
-		return function + " " + argument1 + " " + argument2;
+		string function = functions[random].first;
+		int arity = functions[random].second;
+		string args; //CHANGE THIS TO MAX ARITY? maybe a vector, could also do it in 1 string
+		for(int i=0; i<arity; i++){
+			args += initialize(depth - 1, type) + " ";
+		}
+		return function + " " + args.substr(0,args.length()-1); //CHECK THIS
 	}
 }
 

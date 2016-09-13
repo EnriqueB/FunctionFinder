@@ -4,7 +4,6 @@
 
 #include <iostream>
 #include <string.h>
-#include "individual.h"
 #include <vector>
 #include <time.h>
 #include <stdlib.h>
@@ -16,9 +15,13 @@
 #include <limits>
 #include <cstdint>
 #include <cmath>
+#include <utility>
+
+#include "individual.h"
+
 
 #define TOURNAMENT_SIZE 5
-#define POPULATION_SIZE 10000
+#define POPULATION_SIZE 10
 #define INPUT_SIZE 20.0
 #define SAMPLE_SIZE 20
 #define GENERATIONS 100000
@@ -27,7 +30,7 @@
 using namespace std;
 
 double testArray [SAMPLE_SIZE][2];
-vector <string> functionSet = { "+", "-", "*", "/", "l"};
+vector <pair <string, int> > functionSet;
 vector <Individual> individuals;
 
 double crossoverRate = 0.9;
@@ -67,7 +70,10 @@ double calculate(double op1, double op2, string operation) {
  * and execute the tree with different values of X
  */
 double evaluate(Individual ind, double valueX) {
-	set <string> functions(functionSet.begin(), functionSet.end());
+	vector <string> functions;
+	for(int i=0; i<functionSet.size(); i++){
+		functions.push_back(functionSet[i].first);
+	}
 	stack <double> calculator;
 	string::size_type sz;
 	stringstream ss(ind.getSolution());
@@ -83,7 +89,8 @@ double evaluate(Individual ind, double valueX) {
 	int i = tokens.size() - 1;
     //the string is evaluated from the end towards the front
 	while (i >= 0) {
-		if (functions.find(tokens[i]) == functions.end()) {
+		//CHECK IF THIS STILL WORKS
+		if (find(functions.begin(), functions.end(), tokens[i]) == functions.end()) {
 			//not an operator, push to stack
 			if (tokens[i] == "x")   //If an x is found, then substitute it for the wanted value
 				calculator.push(valueX);    //This should be changed to allow for more than only x as a value
@@ -188,6 +195,14 @@ int main() {
 	srand(time(NULL));
 	vector <string> terminalSet = { "x" };
 
+	//read function set from file
+	ifstream fs("functions.txt");
+	string func; 
+	int arity;
+	while(fs>>func){
+		fs>>arity;
+		functionSet.push_back(make_pair(func, arity));	
+	}
 	ifstream f("values.txt");
 	for (int i = 0; i < SAMPLE_SIZE; i++) {
 		f >> testArray[i][0] >> testArray[i][1];
@@ -198,9 +213,11 @@ int main() {
 		if (rand() % 2 < 0.5) {
 			type = 'g';
 		}
-		Individual ind(functionSet, terminalSet, -10, 10, 3+(i/(POPULATION_SIZE/5)), type, mutationChance, crossoverRate);
+		Individual ind(functionSet, terminalSet, -10, 10, 1+(i/(POPULATION_SIZE/5)), type, mutationChance, crossoverRate);
 		individuals.push_back(ind);
+		cout<<"Ind: "<<i<<" Str: "<<individuals[i].getSolution()<<endl;
 	}
+	/*
 	evaluateFitness();
 	cout << "Starting...\n";
 	for (; generation < GENERATIONS; generation++) {
@@ -212,6 +229,7 @@ int main() {
 	string bestSolution = individuals[bestIndex].getSolution();
 	size_t nodesBest = count(bestSolution.begin(), bestSolution.end(), ' ');
 	cout << "Generation: " << generation << "\t Best Fitness: " << bestFitness << "\nSolution: " << bestSolution << endl <<"NODES: "<<nodesBest+1<< endl;
+	*/
 	return 0;
 }
 
