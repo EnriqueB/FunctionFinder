@@ -21,7 +21,7 @@
 #define POPULATION_SIZE 1000
 #define INPUT_SIZE 10.0
 #define SAMPLE_SIZE 10
-#define GENERATIONS 10000
+#define GENERATIONS 1000000
 #define PARSIMONY_PRESSURE 0.3
 
 using namespace std;
@@ -186,19 +186,12 @@ int tournament(bool type){
 		if (((individuals[ind].getFitness() + nodes*PARSIMONY_PRESSURE) < fitness)==type) {
 			if(!type){
 				if(ind == bestIndex){
-					string s = individuals[bestIndex].getSolution();
-		int nodes = count(s.begin(), s.end(), ' ');
-
-					cout<<"Why... "<<bestFitness+nodes*PARSIMONY_PRESSURE<<"  "<<fitness<<endl;
+					i--;
+					continue;
 				}
 			}
 			fitness = individuals[ind].getFitness() + nodes*PARSIMONY_PRESSURE;
 			index = ind;
-		}
-	}
-	if(!type){
-		if(index == bestIndex){
-			cout<<"WHY GOD"<<endl;
 		}
 	}
 	return index;
@@ -215,9 +208,6 @@ void generateOffspring() {
 		ind.crossOver(individuals[parent1].getSolution(), individuals[parent2].getSolution());
 		//find a suitable candidate to replace
 		int index = tournament(false);
-		if(index == bestIndex){
-			cout<<"WatXover"<<endl;
-		}
 		individuals[index].setSolution(ind.getSolution());
 		individuals[index].setFitness(evaluateSingle(index));
 	}
