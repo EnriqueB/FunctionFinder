@@ -1,11 +1,7 @@
-<<<<<<< HEAD
 # Ignore everything
 *
 
 # But not these files...
-=======
-*
->>>>>>> master
 !.gitignore
 !*.txt
 !*.cpp
