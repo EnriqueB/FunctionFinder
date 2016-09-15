@@ -39,29 +39,50 @@ double bestFitness = (double)INT32_MAX;
 int bestIndex = -1;
 int generation = 0;
 
-double calculate(double op1, double op2, string operation) {
+vector <double> calculate(const vector <double> op1, const vector <double> op2, string operation) {
     //this method executes the operations found
     //in the function string
+	vector <double> ans;
 	switch (operation[0]) {
 	case '+':
-		return op1 + op2;
+		for(int i=0; i<op1.size(); i++){
+			ans.push_back(op1[i]+op2[i]);
+		}
+		return ans;
 	case '-':
-		return op1 - op2;
+		for(int i=0; i<op1.size(); i++){
+			ans.push_back(op1[i]-op2[i]);
+		}
+		return ans;
 	case '*':
-		return op1 * op2;
+		for(int i=0; i<op1.size(); i++){
+			ans.push_back(op1[i]*op2[i]);
+		}
+		return ans;
 	case '/':
         //protected division, can't divide by 0
-		if (op2 < 0.0000001 && op2 > -0.0000001) {
-			return 0.0;
+		for(int i=0; i<op1.size(); i++){
+			if (op2[i] < 0.0000001 && op2[i] > -0.0000001) {
+				ans.push_back(0.0);
+			}
+			else {
+				ans.push_back(op1[i]/op2[i]);
+			}
 		}
-		else {
-			return op1 / op2;
-		}
+		return ans;
     case 'l':
-        if(op1<=0.01 || op2<=0.01){
-            return 0.0;
-        }
-        return (log(op2)/log(op1));
+		for(int i=0; i<op1.size(); i++){
+			if(op1[i]<=1.001 && op1[i] >= 0.999){
+				ans.push_back(0.0);
+			}
+			else if(op1[i]<=0.01 || op2[i]<=0.01){
+				ans.push_back(0.0);
+			}
+			else{
+				ans.push_back(log(op2[i])/log(op1[i]));
+			}
+			return ans;
+		}
 	}
 }
 
@@ -69,14 +90,18 @@ double calculate(double op1, double op2, string operation) {
  * This method should be modified to only parse once
  * and execute the tree with different values of X
  */
-double evaluate(Individual ind, double valueX) {
+vector <double> evaluate(int index) {
 	vector <string> functions;
 	for(int i=0; i<functionSet.size(); i++){
 		functions.push_back(functionSet[i].first);
 	}
-	stack <double> calculator;
+	stack <vector <double> > calculator;
+	vector <double> xValues;
+	for(int i=0; i<SAMPLE_SIZE; i++){
+		xValues.push_back(testArray[i][0]);
+	}
 	string::size_type sz;
-	stringstream ss(ind.getSolution());
+	stringstream ss(individuals[index].getSolution());
 	string item;
 	vector <string> tokens;
 
@@ -93,9 +118,13 @@ double evaluate(Individual ind, double valueX) {
 		if (find(functions.begin(), functions.end(), tokens[i]) == functions.end()) {
 			//not an operator, push to stack
 			if (tokens[i] == "x")   //If an x is found, then substitute it for the wanted value
-				calculator.push(valueX);    //This should be changed to allow for more than only x as a value
-			else
-				calculator.push(stod(tokens[i], &sz)); //push the value of the token
+				calculator.push(xValues);    //This should be changed to allow for more than only x as a value
+			else{
+				//Push a vector of the value;
+				double val = stod(tokens[i], &sz);
+				vector <double> v (SAMPLE_SIZE, val);
+				calculator.push(v); //push the value of the token
+			}
 		}
 		else {
             /*
@@ -104,9 +133,9 @@ double evaluate(Individual ind, double valueX) {
             * This should be changed to accommodate for different
             * arities in the operation set
             */
-			double op1 = calculator.top();
+			vector <double> op1 = calculator.top();
 			calculator.pop();
-			double op2 = calculator.top();
+			vector <double> op2 = calculator.top();
 			calculator.pop();
 			calculator.push(calculate(op1, op2, tokens[i]));
 		}
@@ -118,10 +147,12 @@ double evaluate(Individual ind, double valueX) {
 void evaluateFitness() {
     //Evaluate the string against the multiple test cases
 	for (int i = 0; i < POPULATION_SIZE; i++) {
-		double error = 0;
+		vector <double> results;
+		results = evaluate(i);
+		double error;
 		for (int j = 0; j < SAMPLE_SIZE; j++) {
             //Mean square error
-			error+= pow(testArray[j][1] - evaluate(individuals[i], testArray[j][0]), 2);
+			error+= pow(testArray[j][1] - results[j], 2);
 		}
 		individuals[i].setFitness(error / INPUT_SIZE);
 		if ((error / INPUT_SIZE) < bestFitness) { //This is used to keep track of the generations
@@ -135,15 +166,16 @@ void evaluateFitness() {
 double evaluateSingle(int index) {
     //only run the tests for a single individual
 	double error = 0;
+	vector <double> results = evaluate(index);
 	for (int j = 0; j < SAMPLE_SIZE; j++) {
-		error += pow(testArray[j][1] - evaluate(individuals[index], testArray[j][0]), 2);
+		error += pow(testArray[j][1] - results[j], 2);
 	}
 	if ((error / INPUT_SIZE) < bestFitness) {
 		bestFitness = error/INPUT_SIZE;
-		cout << "Generation: " << generation << "\t Best Fitness: " << bestFitness << "\nSolution: " << individuals[index].getSolution() << endl << endl;
 		bestIndex = index;
+		cout << "Generation: " << generation << "\t Best Fitness: " << bestFitness <<"\nSolution: " << individuals[index].getSolution() << endl << endl;
 	}
-	return (error / INPUT_SIZE);
+	return error/INPUT_SIZE;
 }
 
 
@@ -158,8 +190,14 @@ int tournament(bool type){
 		string s = individuals[ind].getSolution();
 		int nodes = count(s.begin(), s.end(), ' ');
         //check tournament type
-		if (((individuals[ind].getFitness() + nodes*PARSIMONY_PRESSURE)< fitness)==type) {
-			fitness = individuals[ind].getFitness();
+		if (((individuals[ind].getFitness() + nodes*PARSIMONY_PRESSURE) < fitness)==type) {
+			if(!type){
+				if(ind == bestIndex){
+					i--;
+					continue;
+				}
+			}
+			fitness = individuals[ind].getFitness() + nodes*PARSIMONY_PRESSURE;
 			index = ind;
 		}
 	}
@@ -177,7 +215,7 @@ void generateOffspring() {
 		ind.crossOver(individuals[parent1].getSolution(), individuals[parent2].getSolution());
 		//find a suitable candidate to replace
 		int index = tournament(false);
-		individuals[index] = ind;
+		individuals[index].setSolution(ind.getSolution());
 		individuals[index].setFitness(evaluateSingle(index));
 	}
 	else {
@@ -186,7 +224,7 @@ void generateOffspring() {
 		ind.setSolution(individuals[index].getSolution());
 		ind.mutate();
         index = tournament(false);
-		individuals[index]=ind;
+		individuals[index].setSolution(ind.getSolution());
 		individuals[index].setFitness(evaluateSingle(index));
 	}
 }
@@ -213,7 +251,7 @@ int main() {
 		if (rand() % 2 < 0.5) {
 			type = 'g';
 		}
-		Individual ind(functionSet, terminalSet, -10, 10, 1+(i/(POPULATION_SIZE/5)), type, mutationChance, crossoverRate);
+		Individual ind(functionSet, terminalSet, -10, 10, 2+0*(i/(POPULATION_SIZE/5)), type, mutationChance, crossoverRate);
 		individuals.push_back(ind);
 		cout<<"Ind: "<<i<<" Str: "<<individuals[i].getSolution()<<endl;
 	}
@@ -223,6 +261,7 @@ int main() {
 	for (; generation < GENERATIONS; generation++) {
 		generateOffspring();
         if(bestFitness < 0.00001){
+			cout<<"Found a good candidate\n";
             break;
         }
 	}
