@@ -22,8 +22,8 @@
 
 #define TOURNAMENT_SIZE 5
 #define POPULATION_SIZE 10
-#define INPUT_SIZE 20.0
-#define SAMPLE_SIZE 20
+#define INPUT_SIZE 2.0
+#define SAMPLE_SIZE 2
 #define GENERATIONS 100000
 #define PARSIMONY_PRESSURE 0.3
 
@@ -39,51 +39,60 @@ double bestFitness = (double)INT32_MAX;
 int bestIndex = -1;
 int generation = 0;
 
-vector <double> calculate(const vector <double> op1, const vector <double> op2, string operation) {
+vector <double> calculate(const vector <vector <double> > ops, string operation) {
     //this method executes the operations found
     //in the function string
 	vector <double> ans;
 	switch (operation[0]) {
-	case '+':
-		for(int i=0; i<op1.size(); i++){
-			ans.push_back(op1[i]+op2[i]);
+	case '+':	//arity 2
+		for(int i=0; i<ops[0].size(); i++){
+			ans.push_back(ops[0][i]+ops[1][i]);
 		}
 		return ans;
-	case '-':
-		for(int i=0; i<op1.size(); i++){
-			ans.push_back(op1[i]-op2[i]);
+	case '-':	//arity 2
+		for(int i=0; i<ops[0].size(); i++){
+			ans.push_back(ops[0][i]-ops[1][i]);
 		}
 		return ans;
-	case '*':
-		for(int i=0; i<op1.size(); i++){
-			ans.push_back(op1[i]*op2[i]);
+	case '*':	//arity 2
+		for(int i=0; i<ops[0].size(); i++){
+			ans.push_back(ops[0][i]*ops[1][i]);
 		}
 		return ans;
-	case '/':
+	case '/':	//arity 2
         //protected division, can't divide by 0
-		for(int i=0; i<op1.size(); i++){
-			if (op2[i] < 0.0000001 && op2[i] > -0.0000001) {
+		for(int i=0; i<ops[0].size(); i++){
+			if (ops[1][i] < 0.0000001 && ops[1][i] > -0.0000001) {
 				ans.push_back(0.0);
 			}
 			else {
-				ans.push_back(op1[i]/op2[i]);
+				ans.push_back(ops[0][i]/ops[1][i]);
 			}
 		}
 		return ans;
-    case 'l':
-		for(int i=0; i<op1.size(); i++){
-			if(op1[i]<=1.001 && op1[i] >= 0.999){
+    case 'l':	//arity 2
+		for(int i=0; i<ops[0].size(); i++){
+			if(ops[0][i]<=1.001 && ops[0][i] >= 0.999){
 				ans.push_back(0.0);
 			}
-			else if(op1[i]<=0.01 || op2[i]<=0.01){
+			else if(ops[0][i]<=0.01 || ops[1][i]<=0.01){
 				ans.push_back(0.0);
 			}
 			else{
-				ans.push_back(log(op2[i])/log(op1[i]));
+				ans.push_back(log(ops[1][i])/log(ops[0][i]));
 			}
-			return ans;
+		}
+		return ans;
+	}
+}
+
+int getArity(string func){
+	for(int i=0; i<functionSet.size(); i++){
+		if(functionSet[i].first == func){
+			return functionSet[i].second;
 		}
 	}
+	return -1;
 }
 
 /*
@@ -117,8 +126,9 @@ vector <double> evaluate(int index) {
 		//CHECK IF THIS STILL WORKS
 		if (find(functions.begin(), functions.end(), tokens[i]) == functions.end()) {
 			//not an operator, push to stack
-			if (tokens[i] == "x")   //If an x is found, then substitute it for the wanted value
+			if (tokens[i] == "x"){   //If an x is found, then substitute it for the wanted value
 				calculator.push(xValues);    //This should be changed to allow for more than only x as a value
+			}
 			else{
 				//Push a vector of the value;
 				double val = stod(tokens[i], &sz);
@@ -133,11 +143,14 @@ vector <double> evaluate(int index) {
             * This should be changed to accommodate for different
             * arities in the operation set
             */
-			vector <double> op1 = calculator.top();
-			calculator.pop();
-			vector <double> op2 = calculator.top();
-			calculator.pop();
-			calculator.push(calculate(op1, op2, tokens[i]));
+			//Find arity of the operator
+			vector <vector <double> > ops;
+			int arity = getArity(tokens[i]);
+			for(int j = 0; j < arity; j++){
+				ops.push_back(calculator.top());
+				calculator.pop();
+			}
+			calculator.push(calculate(ops, tokens[i]));
 		}
 		i--;
 	}
@@ -149,7 +162,7 @@ void evaluateFitness() {
 	for (int i = 0; i < POPULATION_SIZE; i++) {
 		vector <double> results;
 		results = evaluate(i);
-		double error;
+		double error=0;
 		for (int j = 0; j < SAMPLE_SIZE; j++) {
             //Mean square error
 			error+= pow(testArray[j][1] - results[j], 2);
@@ -251,12 +264,15 @@ int main() {
 		if (rand() % 2 < 0.5) {
 			type = 'g';
 		}
-		Individual ind(functionSet, terminalSet, -10, 10, 2+0*(i/(POPULATION_SIZE/5)), type, mutationChance, crossoverRate);
+		Individual ind(functionSet, terminalSet, -10, 10, 2+1*(i/(POPULATION_SIZE/2)), type, mutationChance, crossoverRate);
 		individuals.push_back(ind);
-		cout<<"Ind: "<<i<<" Str: "<<individuals[i].getSolution()<<endl;
+		//cout<<"Ind: "<<i<<" Str: "<<individuals[i].getSolution()<<endl;
+	}
+	evaluateFitness();
+	for(int i=0; i<POPULATION_SIZE; i++){
+		cout<<individuals[i].getFitness()<<" "<<individuals[i].getSolution()<<endl;
 	}
 	/*
-	evaluateFitness();
 	cout << "Starting...\n";
 	for (; generation < GENERATIONS; generation++) {
 		generateOffspring();
