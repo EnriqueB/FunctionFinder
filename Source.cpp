@@ -24,7 +24,7 @@
 #define POPULATION_SIZE 10
 #define INPUT_SIZE 2.0
 #define SAMPLE_SIZE 2
-#define GENERATIONS 100000
+#define GENERATIONS 10
 #define PARSIMONY_PRESSURE 0.3
 
 using namespace std;
@@ -219,7 +219,8 @@ int tournament(bool type){
 
 void generateOffspring() {
 	double random = ((double)rand() / (RAND_MAX));
-	Individual ind;
+	Individual ind(functionSet);
+	int index;
     //offspring is generated either by crossover or mutation
 	if (random < crossoverRate) {
 		//crossover, pick two parents
@@ -227,13 +228,13 @@ void generateOffspring() {
 		int parent2 = tournament(true);
 		ind.crossOver(individuals[parent1].getSolution(), individuals[parent2].getSolution());
 		//find a suitable candidate to replace
-		int index = tournament(false);
+		index = tournament(false);
 		individuals[index].setSolution(ind.getSolution());
 		individuals[index].setFitness(evaluateSingle(index));
 	}
 	else {
 		//mutation
-		int index = tournament(true);
+		index = tournament(true);
 		ind.setSolution(individuals[index].getSolution());
 		ind.mutate();
         index = tournament(false);
@@ -271,10 +272,8 @@ int main() {
 	evaluateFitness();
 	for(int i=0; i<POPULATION_SIZE; i++){
 		cout<<individuals[i].getFitness()<<" "<<individuals[i].getSolution()<<endl;
-		cout<<"Length: "<<individuals[i].getSolution().length()<<" End index: "<<individuals[i].endIndexOfNode(0, individuals[i].getSolution())<<endl;
-
+		//cout<<"Length: "<<individuals[i].getSolution().length()<<" End index: "<<individuals[i].endIndexOfNode(2, individuals[i].getSolution())<<endl;
 	}
-	/*
 	cout << "Starting...\n";
 	for (; generation < GENERATIONS; generation++) {
 		generateOffspring();
@@ -286,7 +285,6 @@ int main() {
 	string bestSolution = individuals[bestIndex].getSolution();
 	size_t nodesBest = count(bestSolution.begin(), bestSolution.end(), ' ');
 	cout << "Generation: " << generation << "\t Best Fitness: " << bestFitness << "\nSolution: " << bestSolution << endl <<"NODES: "<<nodesBest+1<< endl;
-	*/
 	return 0;
 }
 

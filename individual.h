@@ -8,7 +8,6 @@
 #include <set>
 #include <algorithm>
 #include <utility>
-#include <unordered_map>
 
 
 using namespace std;
@@ -17,7 +16,7 @@ class Individual {
 private:
 	string solution;
 	double fitness;
-	unordered_map <char, int> functionsMap;
+	int functionsArity [93];
 	vector <pair <string, int> > functions;
 	vector <string> terminals;
 	double minValue;
@@ -27,6 +26,7 @@ private:
 
 public:
 	Individual();
+	Individual(vector <pair <string, int> > functionSet);
 	Individual(vector <pair <string, int> > functionSet, vector <string> terminalSet, int minimum, int maximum, int depth, char type, double mC, double cC);
 	//sets
 	void setSolution(string s);
@@ -52,6 +52,12 @@ Individual::Individual() {
 	crossoverChance = 1;
 }
 
+Individual::Individual(vector <pair<string, int> >functionSet){
+	for(int i=0; i<functionSet.size(); i++){
+		functionsArity[functionSet[i].first[0]-33] = functionSet[i].second;
+	}
+}
+
 Individual::Individual(vector <pair<string, int> > functionSet, vector <string> terminalSet, int minimum, int maximum, int depth, char type, double mC, double cC) {
 	functions = functionSet;
 	terminals = terminalSet;
@@ -62,7 +68,7 @@ Individual::Individual(vector <pair<string, int> > functionSet, vector <string> 
 	mutationChance = mC;
 	crossoverChance = cC;
 	for(int i=0; i<functionSet.size(); i++){
-		functionsMap[functionSet[i].first[0]] = functionSet[i].second;
+		functionsArity[functionSet[i].first[0]-33] = functionSet[i].second;
 	}
 }
 
@@ -135,19 +141,19 @@ int Individual::endIndexOfNode(int start, const string str){
 	}
 	//stack of arities
 	stack <int> s;
-	s.push(functionsMap[str[i]]); //push the first one
+	s.push(functionsArity[str[i]-33]); //push the first one
 	i += 2;
 	while(!s.empty()){
 		int arity;
 		while(s.top()==0){
 			arity = s.top();
-				s.pop();
-				arity--;
-				s.push(arity);
-				if(s.empty()){
-					//reached end of node
-					return i;
-				}
+			s.pop();
+			arity--;
+			s.push(arity);
+			if(s.empty()){
+				//reached end of node
+				return i;
+			}
 		}
 		if ((str[i] >= 48 && str[i] <= 57) || str[i] == 'x' || (str[i]=='-' && str[i+1]!=' ')) {
 			//node is a terminal
@@ -158,12 +164,14 @@ int Individual::endIndexOfNode(int start, const string str){
 			arity = s.top();
 			do{
 				if(s.empty()){
-					//reached end of node
 					return i;
 				}
 				if(arity == 0){
 					//remove from stack functions that already finished
 					s.pop();
+					if(s.empty()){
+						return i;
+					}
 				}
 				arity = s.top();
 				s.pop();
@@ -172,7 +180,7 @@ int Individual::endIndexOfNode(int start, const string str){
 			}while(s.top()==0);	
 		}
 		else{
-			s.push(functionsMap[str[i]]);
+			s.push(functionsArity[str[i]-33]);
 			i++;
 		}
 		i++;
