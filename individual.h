@@ -8,6 +8,7 @@
 #include <set>
 #include <algorithm>
 #include <utility>
+#include <unordered_map>
 
 
 using namespace std;
@@ -16,6 +17,7 @@ class Individual {
 private:
 	string solution;
 	double fitness;
+	unordered_map <char, int> functionsMap;
 	vector <pair <string, int> > functions;
 	vector <string> terminals;
 	double minValue;
@@ -59,6 +61,9 @@ Individual::Individual(vector <pair<string, int> > functionSet, vector <string> 
 	fitness = 0;
 	mutationChance = mC;
 	crossoverChance = cC;
+	for(int i=0; i<functionSet.size(); i++){
+		functionsMap[functionSet[i].first[0]] = functionSet[i].second;
+	}
 }
 
 void Individual::setSolution(string s) {
@@ -120,8 +125,7 @@ void Individual::print() {
 /*
  * This method finds the index of the end of a node in a string
  */
-int Individual::endIndexOfNode(int start, string str) {
-	//check if node is a number
+int Individual::endIndexOfNode(int start, const string str){
 	int i = start;
 	if ((str[i] >= 48 && str[i] <= 57) || str[i] == 'x' || (str[i] == '-' && str[i+1]!=' ')) {
 		//find end of number
@@ -129,67 +133,46 @@ int Individual::endIndexOfNode(int start, string str) {
 			i++;
 		return i;
 	}
-
-	//if str is a function:
-	stack <char> s;
-	s.push(str[i]);
+	//stack of arities
+	stack <int> s;
+	s.push(functionsMap[str[i]]); //push the first one
 	i += 2;
-	while (!s.empty()) {
-		//advance to the next node
-		if ((str[i] >= 48 && str[i] <= 57) || str[i] == 'x' || (str[i]=='-' && str[i+1]!=' ')) {
-			//node is a terminal
-			while (i < str.length() && str[i] != ' ') //consume all characters of the terminal
-				i++;
-
-			bool top = true;
-			//check if top of stack is a terminal
-            /*
-            * This should be changed to accommodate for
-            * functions with different arities
-            */
-			while (s.top() == '0' || s.top() == 'x') {
-                /*
-                 * If the top of the stack is a terminal, remove
-                 * from the stack twice (should actually pop until it
-                 * finds a function? Or maybe i should keep track of
-                 * the arity of the functions that have been pushed
-                 */
-				top = false;
+	while(!s.empty()){
+		int arity;
+		while(s.top()==0){
+			arity = s.top();
 				s.pop();
-				s.pop();
-				if (s.empty()) {
-                    //stack is empty, the end of the node has been reached
+				arity--;
+				s.push(arity);
+				if(s.empty()){
+					//reached end of node
 					return i;
 				}
-                if (s.top() == '0' || s.top() == 'x') {
-                    /*
-                     * If there is another terminal at the top, nothing
-                     * is pushed into the stack so in the next iteration
-                     * the terminal is poped along with the function.
-                     * This should also be revised for multiple arities.
-                     */
-                    continue;
-                }
-                else {
-                    //if the top is a function a dummy terminal is pushed
-                    s.push('0');
-                    break;
-                }
-			}
-			if (top) {
-                /*
-                 * If a terminal is found, but the top is not a terminal
-                 * then a dummy terminal is pushed into the stack.
-                 * This is done after the while loop to avoid
-                 * the loop detecting the recently found terminal.
-                 * This should also be revised for multiple arities
-                 */
-				s.push('0');
-			}
 		}
-		else {
-            //If a terminal is found it is pushed to the stack
-			s.push(str[i]);
+		if ((str[i] >= 48 && str[i] <= 57) || str[i] == 'x' || (str[i]=='-' && str[i+1]!=' ')) {
+			//node is a terminal
+			while (i < str.length() && str[i] != ' '){ //consume all characters of the terminal
+				i++;
+			}
+			//subtract one from the top of the stack
+			arity = s.top();
+			do{
+				if(s.empty()){
+					//reached end of node
+					return i;
+				}
+				if(arity == 0){
+					//remove from stack functions that already finished
+					s.pop();
+				}
+				arity = s.top();
+				s.pop();
+				arity--;
+				s.push(arity);
+			}while(s.top()==0);	
+		}
+		else{
+			s.push(functionsMap[str[i]]);
 			i++;
 		}
 		i++;

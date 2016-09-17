@@ -264,13 +264,15 @@ int main() {
 		if (rand() % 2 < 0.5) {
 			type = 'g';
 		}
-		Individual ind(functionSet, terminalSet, -10, 10, 2+1*(i/(POPULATION_SIZE/2)), type, mutationChance, crossoverRate);
+		Individual ind(functionSet, terminalSet, -10, 10, 2+0*(i/(POPULATION_SIZE/2)), type, mutationChance, crossoverRate);
 		individuals.push_back(ind);
 		//cout<<"Ind: "<<i<<" Str: "<<individuals[i].getSolution()<<endl;
 	}
 	evaluateFitness();
 	for(int i=0; i<POPULATION_SIZE; i++){
 		cout<<individuals[i].getFitness()<<" "<<individuals[i].getSolution()<<endl;
+		cout<<"Length: "<<individuals[i].getSolution().length()<<" End index: "<<individuals[i].endIndexOfNode(0, individuals[i].getSolution())<<endl;
+
 	}
 	/*
 	cout << "Starting...\n";
