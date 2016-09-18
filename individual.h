@@ -107,18 +107,14 @@ string Individual::initialize(int depth, char type) {
 		}
 	}
 	else {
-        /*
-         * This should be changed to accommodate for
-         * functions with different arities
-         */
 		int random = rand() % functions.size();
 		string function = functions[random].first;
 		int arity = functions[random].second;
-		string args; //CHANGE THIS TO MAX ARITY? maybe a vector, could also do it in 1 string
+		string args;
 		for(int i=0; i<arity; i++){
 			args += initialize(depth - 1, type) + " ";
 		}
-		return function + " " + args.substr(0,args.length()-1); //CHECK THIS
+		return function + " " + args.substr(0,args.length()-1);
 	}
 }
 

@@ -1,7 +1,3 @@
-/*
- * Idea: Instead of strings, generate list of opperations
- */
-
 #include <iostream>
 #include <string.h>
 #include <vector>
@@ -105,10 +101,6 @@ int getArity(string func){
 	return -1;
 }
 
-/*
- * This method should be modified to only parse once
- * and execute the tree with different values of X
- */
 vector <double> evaluate(int index) {
 	vector <string> functions;
 	for(int i=0; i<functionSet.size(); i++){
@@ -147,12 +139,6 @@ vector <double> evaluate(int index) {
 			}
 		}
 		else {
-            /*
-            * If an operator is found, two values are extracted from the
-            * stack and the operation is applied.
-            * This should be changed to accommodate for different
-            * arities in the operation set
-            */
 			//Find arity of the operator
 			vector <vector <double> > ops;
 			int arity = getArity(tokens[i]);
@@ -277,13 +263,8 @@ int main() {
 		}
 		Individual ind(functionSet, terminalSet, -10, 10, 2+0*(i/(POPULATION_SIZE/2)), type, mutationChance, crossoverRate);
 		individuals.push_back(ind);
-		//cout<<"Ind: "<<i<<" Str: "<<individuals[i].getSolution()<<endl;
 	}
 	evaluateFitness();
-	for(int i=0; i<POPULATION_SIZE; i++){
-		cout<<individuals[i].getFitness()<<" "<<individuals[i].getSolution()<<endl;
-		//cout<<"Length: "<<individuals[i].getSolution().length()<<" End index: "<<individuals[i].endIndexOfNode(2, individuals[i].getSolution())<<endl;
-	}
 	cout << "Starting...\n";
 	for (; generation < GENERATIONS; generation++) {
 		generateOffspring();
