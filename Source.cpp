@@ -83,6 +83,15 @@ vector <double> calculate(const vector <vector <double> > ops, string operation)
 			}
 		}
 		return ans;
+	case 's':	//arity 1
+		for(int i=0; i<ops[0].size(); i++){
+			ans.push_back(sin(ops[0][i]));
+		}
+		return ans;	
+	case 'c':	//arity 2
+		for(int i=0; i<ops[0].size(); i++){
+			ans.push_back(cos(ops[0][i]));
+		}
 	}
 }
 
