@@ -21,10 +21,10 @@
 
 
 #define TOURNAMENT_SIZE 5
-#define POPULATION_SIZE 10
+#define POPULATION_SIZE 20
 #define INPUT_SIZE 2.0
 #define SAMPLE_SIZE 2
-#define GENERATIONS 10
+#define GENERATIONS 100
 #define PARSIMONY_PRESSURE 0.3
 
 using namespace std;
@@ -44,54 +44,55 @@ vector <double> calculate(const vector <vector <double> > ops, string operation)
     //in the function string
 	vector <double> ans;
 	switch (operation[0]) {
-	case '+':	//arity 2
-		for(int i=0; i<ops[0].size(); i++){
-			ans.push_back(ops[0][i]+ops[1][i]);
-		}
-		return ans;
-	case '-':	//arity 2
-		for(int i=0; i<ops[0].size(); i++){
-			ans.push_back(ops[0][i]-ops[1][i]);
-		}
-		return ans;
-	case '*':	//arity 2
-		for(int i=0; i<ops[0].size(); i++){
-			ans.push_back(ops[0][i]*ops[1][i]);
-		}
-		return ans;
-	case '/':	//arity 2
-        //protected division, can't divide by 0
-		for(int i=0; i<ops[0].size(); i++){
-			if (ops[1][i] < 0.0000001 && ops[1][i] > -0.0000001) {
-				ans.push_back(0.0);
+		case '+':	//arity 2
+			for(int i=0; i<ops[0].size(); i++){
+				ans.push_back(ops[0][i]+ops[1][i]);
 			}
-			else {
-				ans.push_back(ops[0][i]/ops[1][i]);
+			return ans;
+		case '-':	//arity 2
+			for(int i=0; i<ops[0].size(); i++){
+				ans.push_back(ops[0][i]-ops[1][i]);
 			}
-		}
-		return ans;
-    case 'l':	//arity 2
-		for(int i=0; i<ops[0].size(); i++){
-			if(ops[0][i]<=1.001 && ops[0][i] >= 0.999){
-				ans.push_back(0.0);
+			return ans;
+		case '*':	//arity 2
+			for(int i=0; i<ops[0].size(); i++){
+				ans.push_back(ops[0][i]*ops[1][i]);
 			}
-			else if(ops[0][i]<=0.01 || ops[1][i]<=0.01){
-				ans.push_back(0.0);
+			return ans;
+		case '/':	//arity 2
+			//protected division, can't divide by 0
+			for(int i=0; i<ops[0].size(); i++){
+				if (ops[1][i] < 0.0000001 && ops[1][i] > -0.0000001) {
+					ans.push_back(0.0);
+				}
+				else {
+					ans.push_back(ops[0][i]/ops[1][i]);
+				}
 			}
-			else{
-				ans.push_back(log(ops[1][i])/log(ops[0][i]));
+			return ans;
+		case 'l':	//arity 2
+			for(int i=0; i<ops[0].size(); i++){
+				if(ops[0][i]<=1.001 && ops[0][i] >= 0.999){
+					ans.push_back(0.0);
+				}
+				else if(ops[0][i]<=0.01 || ops[1][i]<=0.01){
+					ans.push_back(0.0);
+				}
+				else{
+					ans.push_back(log(ops[1][i])/log(ops[0][i]));
+				}
 			}
-		}
-		return ans;
-	case 's':	//arity 1
-		for(int i=0; i<ops[0].size(); i++){
-			ans.push_back(sin(ops[0][i]));
-		}
-		return ans;	
-	case 'c':	//arity 2
-		for(int i=0; i<ops[0].size(); i++){
-			ans.push_back(cos(ops[0][i]));
-		}
+			return ans;
+		case 's':	//arity 1
+			for(int i=0; i<ops[0].size(); i++){
+				ans.push_back(sin(ops[0][i]));
+			}
+			return ans;	
+		case 'c':	//arity 2
+			for(int i=0; i<ops[0].size(); i++){
+				ans.push_back(cos(ops[0][i]));
+			}
+			return ans;
 	}
 }
 
