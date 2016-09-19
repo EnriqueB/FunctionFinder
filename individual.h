@@ -19,6 +19,7 @@ private:
 	int functionsArity [93];
 	vector <pair <string, int> > functions;
 	vector <string> terminals;
+	bool variables [58];
 	double minValue;
 	double maxValue;
 	double mutationChance;
@@ -26,7 +27,7 @@ private:
 
 public:
 	Individual();
-	Individual(vector <pair <string, int> > functionSet);
+	Individual(vector <pair <string, int> > functionSet, vector <string> terminalSet);
 	Individual(vector <pair <string, int> > functionSet, vector <string> terminalSet, int minimum, int maximum, int depth, char type, double mC, double cC);
 	//sets
 	void setSolution(string s);
@@ -52,9 +53,13 @@ Individual::Individual() {
 	crossoverChance = 1;
 }
 
-Individual::Individual(vector <pair<string, int> >functionSet){
+Individual::Individual(vector <pair<string, int> >functionSet, vector <string> terminalSet){
 	for(int i=0; i<functionSet.size(); i++){
 		functionsArity[functionSet[i].first[0]-33] = functionSet[i].second;
+	}
+	memset(variables, false, sizeof(variables));
+	for(int i=0; i<terminalSet.size(); i++){
+		variables[terminalSet[i][0]-'A'] = true;
 	}
 }
 
@@ -69,6 +74,10 @@ Individual::Individual(vector <pair<string, int> > functionSet, vector <string> 
 	crossoverChance = cC;
 	for(int i=0; i<functionSet.size(); i++){
 		functionsArity[functionSet[i].first[0]-33] = functionSet[i].second;
+	}
+	memset(variables, false, sizeof(variables));
+	for(int i=0; i<terminalSet.size(); i++){
+		variables[terminalSet[i][0]-'A'] = true;
 	}
 }
 
@@ -111,6 +120,9 @@ string Individual::initialize(int depth, char type) {
 		string function = functions[random].first;
 		int arity = functions[random].second;
 		string args;
+		if(arity == 0){
+			return function;
+		}
 		for(int i=0; i<arity; i++){
 			args += initialize(depth - 1, type) + " ";
 		}
@@ -129,29 +141,33 @@ void Individual::print() {
  */
 int Individual::endIndexOfNode(int start, const string str){
 	int i = start;
-	if ((str[i] >= 48 && str[i] <= 57) || str[i] == 'x' || (str[i] == '-' && str[i+1]!=' ')) {
+	if ((str[i] >= 48 && str[i] <= 57) || (str[i]=='-' && str[i+1]!=' ') || ((str[i] >= 65 && str[i]<=122) && variables[str[i]-'A'])) {
 		//find end of number
 		while (i<str.length() && str[i] != ' ')
 			i++;
 		return i;
 	}
 	//stack of arities
-	stack <int> s;
+	if(functionsArity[str[i]-33] == 0){
+		return (i+1);
+	} 
+	stack <int> s;	
 	s.push(functionsArity[str[i]-33]); //push the first one
 	i += 2;
 	while(!s.empty()){
 		int arity;
 		while(s.top()==0){
-			arity = s.top();
 			s.pop();
-			arity--;
-			s.push(arity);
 			if(s.empty()){
 				//reached end of node
 				return i;
 			}
+			arity = s.top();
+			s.pop();
+			arity--;
+			s.push(arity);
 		}
-		if ((str[i] >= 48 && str[i] <= 57) || str[i] == 'x' || (str[i]=='-' && str[i+1]!=' ')) {
+		if ((str[i] >= 48 && str[i] <= 57) || (str[i]=='-' && str[i+1]!=' ') || ((str[i] >= 65 && str[i]<=122) && variables[str[i]-'A'])) {
 			//node is a terminal
 			while (i < str.length() && str[i] != ' '){ //consume all characters of the terminal
 				i++;
@@ -180,6 +196,9 @@ int Individual::endIndexOfNode(int start, const string str){
 			i++;
 		}
 		i++;
+		if(i>=str.length()){
+			return str.length()-1;;
+		}
 	}
 	return i;
 }
@@ -239,7 +258,6 @@ void Individual::crossOver(string a, string b) {
 		solution = a;
 		return;
 	}
-
 	//look for a crossOver spot in parent a
 	int crossOverIndex_A = -1;
 	int crossOverIndex_B = -1;
