@@ -1,5 +1,5 @@
 # FunctionFinder
-A genetic programming approach to finding a function that aproximates a series of X and Y pairs.
+A genetic programming approach to finding a function that aproximates a series of data points.
 
 Parameters:
 
