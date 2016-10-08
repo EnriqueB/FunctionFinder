@@ -238,7 +238,6 @@ void generateOffspring() {
 	else {
 		//mutation
 		index = tournament(true);
-		int parent1 = index;
 		ind.setSolution(individuals[index].getSolution());
 		ind.mutate();
         index = tournament(false);
