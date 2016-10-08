@@ -22,7 +22,7 @@
 #define SAMPLE_SIZE 11
 #define GENERATIONS 100000
 #define PARSIMONY_PRESSURE 0.3
-#define AMMOUNT_VARIABLES 3
+#define AMMOUNT_VARIABLES 1
 
 using namespace std;
 
@@ -238,6 +238,7 @@ void generateOffspring() {
 	else {
 		//mutation
 		index = tournament(true);
+		int parent1 = index;
 		ind.setSolution(individuals[index].getSolution());
 		ind.mutate();
         index = tournament(false);

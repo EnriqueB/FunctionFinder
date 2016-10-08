@@ -54,6 +54,8 @@ Individual::Individual() {
 }
 
 Individual::Individual(vector <pair<string, int> >functionSet, vector <string> terminalSet){
+	functions = functionSet;
+	terminals = terminalSet;
 	for(int i=0; i<functionSet.size(); i++){
 		functionsArity[functionSet[i].first[0]-33] = functionSet[i].second;
 	}
@@ -149,24 +151,13 @@ int Individual::endIndexOfNode(int start, const string str){
 	}
 	//stack of arities
 	if(functionsArity[str[i]-33] == 0){
-		return (i+1);
+		return i+1;
 	} 
-	stack <int> s;	
+	stack <int> s;
 	s.push(functionsArity[str[i]-33]); //push the first one
 	i += 2;
 	while(!s.empty()){
 		int arity;
-		while(s.top()==0){
-			s.pop();
-			if(s.empty()){
-				//reached end of node
-				return i;
-			}
-			arity = s.top();
-			s.pop();
-			arity--;
-			s.push(arity);
-		}
 		if ((str[i] >= 48 && str[i] <= 57) || (str[i]=='-' && str[i+1]!=' ') || ((str[i] >= 65 && str[i]<=122) && variables[str[i]-'A'])) {
 			//node is a terminal
 			while (i < str.length() && str[i] != ' '){ //consume all characters of the terminal
@@ -194,11 +185,24 @@ int Individual::endIndexOfNode(int start, const string str){
 		else{
 			s.push(functionsArity[str[i]-33]);
 			i++;
+			while (s.top() == 0) {
+				s.pop();
+				if (s.empty()) {
+					//reached end of node
+					return i;
+				}
+				arity = s.top();
+				s.pop();
+				arity--;
+				s.push(arity);
+			}
 		}
 		i++;
+		/*
 		if(i>=str.length()){
-			return str.length()-1;;
+			return str.length();
 		}
+		*/
 	}
 	return i;
 }
@@ -294,5 +298,4 @@ void Individual::crossOver(string a, string b) {
 	int endB = endIndexOfNode(crossOverIndex_B, b);
 	solution.replace(crossOverIndex_A, endA-crossOverIndex_A, b.substr(crossOverIndex_B, endB - crossOverIndex_B));
 }
-
 #endif
