@@ -18,11 +18,11 @@
 
 #define TOURNAMENT_SIZE 5
 #define POPULATION_SIZE 1000
-#define INPUT_SIZE 11.0
-#define SAMPLE_SIZE 11
+#define INPUT_SIZE 5.0
+#define SAMPLE_SIZE 5
 #define GENERATIONS 100000
 #define PARSIMONY_PRESSURE 0.3
-#define AMMOUNT_VARIABLES 1
+#define AMMOUNT_VARIABLES 2
 
 using namespace std;
 

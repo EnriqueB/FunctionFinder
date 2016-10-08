@@ -198,11 +198,6 @@ int Individual::endIndexOfNode(int start, const string str){
 			}
 		}
 		i++;
-		/*
-		if(i>=str.length()){
-			return str.length();
-		}
-		*/
 	}
 	return i;
 }
