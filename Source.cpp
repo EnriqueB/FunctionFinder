@@ -72,6 +72,7 @@ vector <double> calculate(const vector <vector <double> > ops, string operation)
 			}
 			return ans;
 		case 'l':	//arity 2
+			//protected logarithm
 			for(int i=0; i<ops[0].size(); i++){
 				if(ops[0][i]<=1.001 && ops[0][i] >= 0.999){
 					ans.push_back(0.0);
@@ -123,7 +124,6 @@ vector <double> evaluate(int index) {
 	stringstream ss(individuals[index].getSolution());
 	string item;
 	vector <string> tokens;
-	//cout<<"String: "<<individuals[index].getSolution()<<endl;
     //tokenize the string
     //perhaps a faster approach would be to move through the
     //string like in the mutation and crossover methods
@@ -133,16 +133,13 @@ vector <double> evaluate(int index) {
 	int i = tokens.size() - 1;
     //the string is evaluated from the end towards the front
 	while (i >= 0) {
-		//CHECK IF THIS STILL WORKS
-		if (find(functions.begin(), functions.end(), tokens[i]) == functions.end()) {
-			//not an operator, push to stack
+		if (find(functions.begin(), functions.end(), tokens[i]) == functions.end()) { //not an operator, push to stack
 
-			if (tokens[i][0]>64 && variables[tokens[i][0]-'A']>=0){   //If an x is found, then substitute it for the wanted value
-				calculator.push(variableValues[variables[tokens[i][0]-'A']]);    //This should be changed to allow for more than only x as a value
+			if (tokens[i][0]>64 && variables[tokens[i][0]-'A']>=0){	//if the token is a variable then insert the values
+				calculator.push(variableValues[variables[tokens[i][0]-'A']]);
 			}
 			else{
 				//Push a vector of the value;
-				//cout<<"Token: "<<tokens[i]<<endl;
 				double val = stod(tokens[i], &sz);
 				vector <double> v (SAMPLE_SIZE, val);
 				calculator.push(v); //push the value of the token
