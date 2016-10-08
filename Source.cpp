@@ -17,17 +17,22 @@
 
 
 #define TOURNAMENT_SIZE 5
-#define POPULATION_SIZE 20
-#define INPUT_SIZE 2.0
-#define SAMPLE_SIZE 2
-#define GENERATIONS 100
+#define POPULATION_SIZE 1000
+#define INPUT_SIZE 11.0
+#define SAMPLE_SIZE 11
+#define GENERATIONS 100000
 #define PARSIMONY_PRESSURE 0.3
+#define AMMOUNT_VARIABLES 3
 
 using namespace std;
 
-double testArray [SAMPLE_SIZE][2];
+double testArray [SAMPLE_SIZE][1+AMMOUNT_VARIABLES];
 vector <pair <string, int> > functionSet;
+vector <string> terminalSet;
 vector <Individual> individuals;
+int variables [57];
+vector <vector <double> > variableValues;
+
 
 double crossoverRate = 0.9;
 double mutationChance = 0.1;
@@ -89,6 +94,12 @@ vector <double> calculate(const vector <vector <double> > ops, string operation)
 				ans.push_back(cos(ops[0][i]));
 			}
 			return ans;
+		case 'r': //arity 0			//DOESNT WORK YET
+			for(int i=0; i<SAMPLE_SIZE; i++){
+				double constant = (rand() % (int)(10 * 1000 + abs(-10 * 1000))) / 1000.0 - abs(-10);
+				ans.push_back(constant);
+			}	
+			return ans;
 	}
 }
 
@@ -107,15 +118,12 @@ vector <double> evaluate(int index) {
 		functions.push_back(functionSet[i].first);
 	}
 	stack <vector <double> > calculator;
-	vector <double> xValues;
-	for(int i=0; i<SAMPLE_SIZE; i++){
-		xValues.push_back(testArray[i][0]);
-	}
+	
 	string::size_type sz;
 	stringstream ss(individuals[index].getSolution());
 	string item;
 	vector <string> tokens;
-
+	//cout<<"String: "<<individuals[index].getSolution()<<endl;
     //tokenize the string
     //perhaps a faster approach would be to move through the
     //string like in the mutation and crossover methods
@@ -128,11 +136,13 @@ vector <double> evaluate(int index) {
 		//CHECK IF THIS STILL WORKS
 		if (find(functions.begin(), functions.end(), tokens[i]) == functions.end()) {
 			//not an operator, push to stack
-			if (tokens[i] == "x"){   //If an x is found, then substitute it for the wanted value
-				calculator.push(xValues);    //This should be changed to allow for more than only x as a value
+
+			if (tokens[i][0]>64 && variables[tokens[i][0]-'A']>=0){   //If an x is found, then substitute it for the wanted value
+				calculator.push(variableValues[variables[tokens[i][0]-'A']]);    //This should be changed to allow for more than only x as a value
 			}
 			else{
 				//Push a vector of the value;
+				//cout<<"Token: "<<tokens[i]<<endl;
 				double val = stod(tokens[i], &sz);
 				vector <double> v (SAMPLE_SIZE, val);
 				calculator.push(v); //push the value of the token
@@ -141,7 +151,7 @@ vector <double> evaluate(int index) {
 		else {
 			//Find arity of the operator
 			vector <vector <double> > ops;
-			int arity = getArity(tokens[i]);
+			int arity = getArity(tokens[i]);		//consider changing this to an array for faster search
 			for(int j = 0; j < arity; j++){
 				ops.push_back(calculator.top());
 				calculator.pop();
@@ -161,7 +171,7 @@ void evaluateFitness() {
 		double error=0;
 		for (int j = 0; j < SAMPLE_SIZE; j++) {
             //Mean square error
-			error+= pow(testArray[j][1] - results[j], 2);
+			error+= pow(testArray[j][0] - results[j], 2);
 		}
 		individuals[i].setFitness(error / INPUT_SIZE);
 		if ((error / INPUT_SIZE) < bestFitness) { //This is used to keep track of the generations
@@ -177,7 +187,7 @@ double evaluateSingle(int index) {
 	double error = 0;
 	vector <double> results = evaluate(index);
 	for (int j = 0; j < SAMPLE_SIZE; j++) {
-		error += pow(testArray[j][1] - results[j], 2);
+		error += pow(testArray[j][0] - results[j], 2);
 	}
 	if ((error / INPUT_SIZE) < bestFitness) {
 		bestFitness = error/INPUT_SIZE;
@@ -215,7 +225,7 @@ int tournament(bool type){
 
 void generateOffspring() {
 	double random = ((double)rand() / (RAND_MAX));
-	Individual ind(functionSet);
+	Individual ind(functionSet, terminalSet);
 	int index;
     //offspring is generated either by crossover or mutation
 	if (random < crossoverRate) {
@@ -241,8 +251,10 @@ void generateOffspring() {
 
 int main() {
 	srand(time(NULL));
-	vector <string> terminalSet = { "x" };
-
+	for(int i=0; i<57; i++){
+		variables[i] = -1;
+	}
+	
 	//read function set from file
 	ifstream fs("functions.txt");
 	string func; 
@@ -252,8 +264,25 @@ int main() {
 		functionSet.push_back(make_pair(func, arity));	
 	}
 	ifstream f("values.txt");
+
+	string ter;
+	f>>ter;
+	for(int i=0; i<AMMOUNT_VARIABLES; i++){
+		f>>ter;
+		terminalSet.push_back(ter);
+		variables[ter[0]-'A'] = i;
+	}
 	for (int i = 0; i < SAMPLE_SIZE; i++) {
-		f >> testArray[i][0] >> testArray[i][1];
+		for(int j=0; j<AMMOUNT_VARIABLES + 1; j++){
+			f >> testArray[i][j];
+		}
+	}
+	for(int i=1; i<AMMOUNT_VARIABLES+1; i++){
+		vector <double> vals;
+		for(int j=0; j<SAMPLE_SIZE; j++){
+			vals.push_back(testArray[j][i]);
+		}
+		variableValues.push_back(vals);
 	}
 	for (int i = 0; i < POPULATION_SIZE; i++) {
 		char type = 'f';
@@ -278,5 +307,3 @@ int main() {
 	cout << "Generation: " << generation << "\t Best Fitness: " << bestFitness << "\nSolution: " << bestSolution << endl <<"NODES: "<<nodesBest+1<< endl;
 	return 0;
 }
-
-
