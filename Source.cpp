@@ -40,6 +40,14 @@ double bestFitness = (double)INT32_MAX;
 int bestIndex = -1;
 int generation = 0;
 
+
+/*
+ * This method receives a vector of vectors 
+ * of doubles and uses it to calculate the
+ * results of the required operation.
+ * The ammount of vectors received depends on
+ * the arity of the operation required.
+ */
 vector <double> calculate(const vector <vector <double> > ops, string operation) {
     //this method executes the operations found
     //in the function string
@@ -95,7 +103,7 @@ vector <double> calculate(const vector <vector <double> > ops, string operation)
 				ans.push_back(cos(ops[0][i]));
 			}
 			return ans;
-		case 'r': //arity 0			//DOESNT WORK YET
+		case 'r': //arity 0
 			for(int i=0; i<SAMPLE_SIZE; i++){
 				double constant = (rand() % (int)(10 * 1000 + abs(-10 * 1000))) / 1000.0 - abs(-10);
 				ans.push_back(constant);
@@ -104,6 +112,11 @@ vector <double> calculate(const vector <vector <double> > ops, string operation)
 	}
 }
 
+/*
+ * This method searches a function
+ * in the function set and
+ * returns the arity
+ */
 int getArity(string func){
 	for(int i=0; i<functionSet.size(); i++){
 		if(functionSet[i].first == func){
@@ -113,29 +126,39 @@ int getArity(string func){
 	return -1;
 }
 
+/*
+ * This method parses and evaluates 
+ * a solution tree for all of the
+ * training examples.
+ * It tokenizes the string and evaluates 
+ * it from the end to the front.
+ */
 vector <double> evaluate(int index) {
+	
+	//vector used to search for functions
+	//could probably be changed to use the getArity
+	//method or an array implementation like in
+	//individuals.h
 	vector <string> functions;
 	for(int i=0; i<functionSet.size(); i++){
 		functions.push_back(functionSet[i].first);
 	}
 	stack <vector <double> > calculator;
 	
+	//tokenize the string	
 	string::size_type sz;
 	stringstream ss(individuals[index].getSolution());
 	string item;
 	vector <string> tokens;
-    //tokenize the string
-    //perhaps a faster approach would be to move through the
-    //string like in the mutation and crossover methods
 	while (getline(ss, item, ' ')) {
 		tokens.push_back(item);
 	}
 	int i = tokens.size() - 1;
-    //the string is evaluated from the end towards the front
 	while (i >= 0) {
-		if (find(functions.begin(), functions.end(), tokens[i]) == functions.end()) { //not an operator, push to stack
-
-			if (tokens[i][0]>64 && variables[tokens[i][0]-'A']>=0){	//if the token is a variable then insert the values
+		if (find(functions.begin(), functions.end(), tokens[i]) == functions.end()) { 
+			//not an operator, push to stack
+			if (tokens[i][0]>64 && variables[tokens[i][0]-'A']>=0){	
+				//if the token is a variable then insert the values
 				calculator.push(variableValues[variables[tokens[i][0]-'A']]);
 			}
 			else{
@@ -146,8 +169,10 @@ vector <double> evaluate(int index) {
 			}
 		}
 		else {
-			//Find arity of the operator
+			//A vector of vector is created to manage
+			//functions with different arities.
 			vector <vector <double> > ops;
+			//Find arity of the operator
 			int arity = getArity(tokens[i]);		//consider changing this to an array for faster search
 			for(int j = 0; j < arity; j++){
 				ops.push_back(calculator.top());
