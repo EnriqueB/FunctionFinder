@@ -223,13 +223,7 @@ void Individual::mutate() {
 		}
 		else {
 			//advance to the next node
-			if (solution[i] >= 48 && solution[i] <= 57 || (solution[i] == '-' && solution[i+1]!=' ')) {
-				//node is a number
-				while (i<solution.length() && solution[i] != ' ') //consume all characters
-					i++;
-			}
-			else {						//THIS SHOULD CHANGE IF FUNCTIONS ARE REPRESENTED BY MORE THAN ONE LETTER
-				//not a number, advance once
+			while (i<solution.length() && solution[i] != ' '){
 				i++;
 			}
 		}
