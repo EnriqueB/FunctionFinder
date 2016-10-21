@@ -17,8 +17,8 @@ private:
 	string solution;
 	double fitness;
 	int functionsArity [93];
-	vector <pair <string, int> > functions;
-	vector <string> terminals;
+	vector <pair <char, int> > functions;
+	vector <char> terminals;
 	bool variables [58];
 	double minValue;
 	double maxValue;
@@ -27,8 +27,8 @@ private:
 
 public:
 	Individual();
-	Individual(vector <pair <string, int> > functionSet, vector <string> terminalSet);
-	Individual(vector <pair <string, int> > functionSet, vector <string> terminalSet, int minimum, int maximum, int depth, char type, double mC, double cC);
+	Individual(vector <pair <char, int> > functionSet, vector <char> terminalSet);
+	Individual(vector <pair <char, int> > functionSet, vector <char> terminalSet, int minimum, int maximum, int depth, char type, double mC, double cC);
 	//sets
 	void setSolution(string s);
 	void setFitness(double f);
@@ -53,19 +53,19 @@ Individual::Individual() {
 	crossoverChance = 1;
 }
 
-Individual::Individual(vector <pair<string, int> >functionSet, vector <string> terminalSet){
+Individual::Individual(vector <pair<char, int> >functionSet, vector <char> terminalSet){
 	functions = functionSet;
 	terminals = terminalSet;
 	for(int i=0; i<functionSet.size(); i++){
-		functionsArity[functionSet[i].first[0]-33] = functionSet[i].second;
+		functionsArity[functionSet[i].first-33] = functionSet[i].second;
 	}
 	memset(variables, false, sizeof(variables));
 	for(int i=0; i<terminalSet.size(); i++){
-		variables[terminalSet[i][0]-'A'] = true;
+		variables[terminalSet[i]-'A'] = true;
 	}
 }
 
-Individual::Individual(vector <pair<string, int> > functionSet, vector <string> terminalSet, int minimum, int maximum, int depth, char type, double mC, double cC) {
+Individual::Individual(vector <pair<char, int> > functionSet, vector <char> terminalSet, int minimum, int maximum, int depth, char type, double mC, double cC) {
 	functions = functionSet;
 	terminals = terminalSet;
 	minValue = minimum / 1.0;
@@ -75,11 +75,11 @@ Individual::Individual(vector <pair<string, int> > functionSet, vector <string> 
 	mutationChance = mC;
 	crossoverChance = cC;
 	for(int i=0; i<functionSet.size(); i++){
-		functionsArity[functionSet[i].first[0]-33] = functionSet[i].second;
+		functionsArity[functionSet[i].first-33] = functionSet[i].second;
 	}
 	memset(variables, false, sizeof(variables));
 	for(int i=0; i<terminalSet.size(); i++){
-		variables[terminalSet[i][0]-'A'] = true;
+		variables[terminalSet[i]-'A'] = true;
 	}
 }
 
@@ -114,12 +114,13 @@ string Individual::initialize(int depth, char type) {
 		}
 		else {
             //return a variable
-			return terminals[random];
+			return string(1, terminals[random]);
 		}
 	}
 	else {
+		//return a function
 		int random = rand() % functions.size();
-		string function = functions[random].first;
+		string function = string(1, functions[random].first);
 		int arity = functions[random].second;
 		string args;
 		if(arity == 0){
@@ -149,10 +150,10 @@ int Individual::endIndexOfNode(int start, const string str){
 			i++;
 		return i;
 	}
-	//stack of arities
 	if(functionsArity[str[i]-33] == 0){
 		return i+1;
 	} 
+	//stack of arities
 	stack <int> s;
 	s.push(functionsArity[str[i]-33]); //push the first one
 	i += 2;
@@ -183,8 +184,10 @@ int Individual::endIndexOfNode(int start, const string str){
 			}while(s.top()==0);	
 		}
 		else{
+			//node is a function, push arity to stack
 			s.push(functionsArity[str[i]-33]);
 			i++;
+			//check if a function with arity 0 was inserted
 			while (s.top() == 0) {
 				s.pop();
 				if (s.empty()) {
@@ -228,7 +231,7 @@ void Individual::mutate() {
 				while (i<solution.length() && solution[i] != ' ') //consume all characters
 					i++;
 			}
-			else {						//THIS SHOULD CHANGE IF FUNCTIONS ARE REPRESENTED BY MORE THAN ONE LETTER
+			else {					
 				//not a number, advance once
 				i++;
 			}
