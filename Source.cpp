@@ -17,19 +17,17 @@
 
 #define TOURNAMENT_SIZE 5
 #define POPULATION_SIZE 1000
-#define INPUT_SIZE 5.0
-#define SAMPLE_SIZE 5
 #define GENERATIONS 100000
 #define PARSIMONY_PRESSURE 0.3
-#define AMMOUNT_VARIABLES 2				//Does not count 'y', i.e. having y, x, z  = 2
 
 using namespace std;
 
-double testArray [SAMPLE_SIZE][1+AMMOUNT_VARIABLES];
+vector <vector <double> > testArray;
 vector <pair <char, int> > functionSet;
 vector <char> terminalSet;
 vector <Individual> individuals;
 int variables [58];
+// Stores the arity of a function if it exists. If not, it stores a -1
 int functions[93];
 vector <vector <double> > variableValues;
 
@@ -38,18 +36,18 @@ double mutationChance = 0.1;
 double bestFitness = (double)INT32_MAX;
 int bestIndex = -1;
 int generation = 0;
+int SAMPLE_SIZE;
+double INPUT_SIZE;
+// Does not count 'y', i.e. having y, x, z  = 2
+int AMMOUNT_VARIABLES;
 
 
 /*
- * This method receives a vector of vectors 
- * of doubles and uses it to calculate the
- * results of the required operation.
- * The ammount of vectors received depends on
- * the arity of the operation required.
+ * This method receives a vector of vectors of doubles and uses it to 
+ * calculate the results of the required operation. The ammount of 
+ * vectors received depends on the arity of the operation required.
  */
 vector <double> calculate(const vector <vector <double> > ops, string operation) {
-    //this method executes the operations found
-    //in the function string
 	vector <double> ans;
 	switch (operation[0]) {
 		case '+':	//arity 2
@@ -112,16 +110,12 @@ vector <double> calculate(const vector <vector <double> > ops, string operation)
 }
 
 /*
- * This method parses and evaluates 
- * a solution tree for all of the
- * training examples.
- * It tokenizes the string and evaluates 
+ * This method parses and evaluates a solution tree for all of the
+ * training examples. It tokenizes the string and evaluates 
  * it from the end to the front.
  */
 vector <double> evaluate(int index) {
 	stack <vector <double> > calculator;
-	
-	//tokenize the string	
 	string::size_type sz;
 	stringstream ss(individuals[index].getSolution());
 	string item;
@@ -130,17 +124,16 @@ vector <double> evaluate(int index) {
 		tokens.push_back(item);
 	}
 	int i = tokens.size() - 1;
-	//Evaluate tree from the end
+	//Evaluate solution backwards
 	while (i >= 0) {
-		if (functions[tokens[i][0]-33] < 0 || tokens[i].length()>1){
+		if (functions[tokens[i][0] - 33] < 0 || tokens[i].length() > 1){
 			//not an operator, push to stack
-			if (tokens[i][0]>64 && variables[tokens[i][0]-'A']>=0){	
-				//if the token is a variable then insert the values
-				calculator.push(variableValues[variables[tokens[i][0]-'A']]);
+			if (tokens[i][0] > 64 && variables[tokens[i][0] - 'A'] >= 0){	
+				//if the token is a variable then insert the vector of values
+				calculator.push(variableValues[variables[tokens[i][0] - 'A']]);
 			}
 			else{
 				//Push a vector of the value
-				//double val = stod(tokens[i], &sz);	//this stopped working...??
 				double val = strtod(tokens[i].c_str(), NULL);
 				vector <double> v (SAMPLE_SIZE, val);
 				calculator.push(v); //push the value of the token
@@ -150,8 +143,7 @@ vector <double> evaluate(int index) {
 			//A vector of vectors is created to manage
 			//functions with different arities.
 			vector <vector <double> > ops;
-			//Find arity of the operator
-			int arity = functions[tokens[i][0]-33];
+			int arity = functions[tokens[i][0] - 33];
 			for(int j = 0; j < arity; j++){
 				ops.push_back(calculator.top());
 				calculator.pop();
@@ -161,25 +153,6 @@ vector <double> evaluate(int index) {
 		i--;
 	}
 	return calculator.top();
-}
-
-void evaluateFitness() {
-    //Evaluate the string against the multiple test cases
-	for (int i = 0; i < POPULATION_SIZE; i++) {
-		vector <double> results;
-		results = evaluate(i);
-		double error=0;
-		for (int j = 0; j < SAMPLE_SIZE; j++) {
-            //Mean square error
-			error+= pow(testArray[j][0] - results[j], 2);
-		}
-		individuals[i].setFitness(error / INPUT_SIZE);
-		if ((error / INPUT_SIZE) < bestFitness) {
-			bestFitness = error / INPUT_SIZE;
-			bestIndex = i;
-			cout << "Generation: " << generation << "\t Best Fitness: " << bestFitness << "\nSolution: " << individuals[i].getSolution() << endl << endl;
-		}
-    }
 }
 
 double evaluateSingle(int index) {
@@ -197,19 +170,27 @@ double evaluateSingle(int index) {
 	return error/INPUT_SIZE;
 }
 
+void evaluateFitness() {
+    // Evaluates fitness of all the population.
+	for (int i = 0; i < POPULATION_SIZE; i++) {
+		vector <double> results;
+		results = evaluate(i);
+		individuals[i].setFitness(evaluateSingle(i));
+    }
+}
 
 int tournament(bool type){
-    //Tournament selection
-    //type = true for normal, false for negative tournament
+    // Tournament selection
+    // Type = true for normal, false for negative tournament
 	double fitness = (double)INT32_MAX;
-    if(!type)fitness = 0;
+    if (!type) fitness = 0;
 	int index = 0;
 	for (int i = 0; i < TOURNAMENT_SIZE; i++) {
 		int ind = rand() % POPULATION_SIZE;
 		string s = individuals[ind].getSolution();
 		int nodes = count(s.begin(), s.end(), ' ');
         //check tournament type
-		if (((individuals[ind].getFitness() + nodes*PARSIMONY_PRESSURE) < fitness)==type) {
+		if (((individuals[ind].getFitness() + nodes*PARSIMONY_PRESSURE) < fitness) == type) {
 			if(!type){
 				if(ind == bestIndex){
 					i--;
@@ -227,19 +208,18 @@ void generateOffspring() {
 	double random = ((double)rand() / (RAND_MAX));
 	Individual ind(functionSet, terminalSet);
 	int index;
-    //offspring is generated either by crossover or mutation
+    // Offspring is generated either by crossover or mutation
 	if (random < crossoverRate) {
 		//crossover, pick two parents
 		int parent1 = tournament(true);
 		int parent2 = tournament(true);
 		ind.crossOver(individuals[parent1].getSolution(), individuals[parent2].getSolution());
-		//find a suitable candidate to replace
 		index = tournament(false);
 		individuals[index].setSolution(ind.getSolution());
 		individuals[index].setFitness(evaluateSingle(index));
 	}
 	else {
-		//mutation
+		// Mutation
 		index = tournament(true);
 		ind.setSolution(individuals[index].getSolution());
 		ind.mutate();
@@ -249,12 +229,7 @@ void generateOffspring() {
 	}
 }
 
-int main() {
-	srand(time(NULL));
-	memset(variables, -1, sizeof(variables));
-	memset(functions, -1, sizeof(functions));
-	
-	//read function set from file
+void readFunctionSet(){
 	ifstream fs("functions.txt");
 	char func; 
 	int arity;
@@ -263,22 +238,40 @@ int main() {
 		functions[func-33] = arity;
 		functionSet.push_back(make_pair(func, arity));	
 	}
-	//read values and variables from file
-	ifstream f("values.txt");
+	fs.close();
+}
+
+void readVariables(){
+	// Read values and variables from file
+	string varFile;
+	cout << "Name of variable file: ";
+	cin >> varFile;
+	ifstream fs(varFile);
 	char ter;
-	//read variable letters first
-	f>>ter;
-	for(int i=0; i<AMMOUNT_VARIABLES; i++){
-		f>>ter;
-		terminalSet.push_back(ter);
-		variables[ter-'A'] = i;
+	// Read variable letters first
+	string vars;
+	getline(fs, vars);
+	AMMOUNT_VARIABLES = count(vars.begin(), vars.end(), ' ');
+	for (int i = 2, j = 0; i < vars.length(); i += 2, j++) {
+		terminalSet.push_back(vars[i]);
+		variables[vars[i] - 'A'] = j;
 	}
+
 	//read values
-	for (int i = 0; i < SAMPLE_SIZE; i++) {
-		for(int j=0; j<AMMOUNT_VARIABLES + 1; j++){
-			f >> testArray[i][j];
+	double val;
+	int i = 0;
+	while (fs >> val) {
+		vector <double> ts;
+		ts.push_back(val);
+		for (int j = 1; j<AMMOUNT_VARIABLES+1; j++) {
+			fs >> val;
+			ts.push_back(val);
 		}
+		testArray.push_back(ts);
+		i++;
 	}
+	SAMPLE_SIZE = i;
+	INPUT_SIZE = (double)SAMPLE_SIZE;
 
 	//create a vector of values for each variables
 	//this vectors are used when parsing the tree
@@ -289,7 +282,19 @@ int main() {
 		}
 		variableValues.push_back(vals);
 	}
-	
+	fs.close();
+}
+
+int main() {
+
+	srand(time(NULL));
+	memset(variables, -1, sizeof(variables));
+	memset(functions, -1, sizeof(functions));
+	INPUT_SIZE = (double)SAMPLE_SIZE;
+
+	readFunctionSet();
+	readVariables();
+
 	//generate individuals
 	for (int i = 0; i < POPULATION_SIZE; i++) {
 		char type = 'f';

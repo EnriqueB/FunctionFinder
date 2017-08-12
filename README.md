@@ -10,15 +10,9 @@ A genetic programming approach to finding a function that aproximates a series o
 
 **POPULATION_SIZE:** Determines the ammount of individuals to create at the start
 
-**INPUT_SIZE:** Used for obtaining fitness. Must be the same as **SAMPLE_SIZE** but in decimal format
-
-**SAMPLE_SIZE:** Ammount of data available
-
 **GENERATIONS:** Maximum ammount of generations
 
 **PARSIMONY_PRESSURE:** Constant that reduces fitness of large individuals while evaluating.
-
-**AMMOUNT_VARIABLES:** Determines the ammount of variables to read. Does **NOT** take into account the variable to be aproximated. I.e. in y = 2x+3z, the 'y' should not be counted for this value.
 
 ### functions.txt
 This file contains the list of functions that the system will use. Each function can only be represented by one character\
